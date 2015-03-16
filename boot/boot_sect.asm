@@ -2,7 +2,7 @@
 [org 0x7c00]
 [bits 16]
 
-KERNEL equ 0x1000			;;This is where the kernel will be loaded to
+KERNEL equ 0x1000			;This is where the kernel will be loaded to
 
 boot_start:
 
@@ -39,9 +39,12 @@ ret
 
 ;This is where we arrive after switching to protected mode
 BEGIN_PM:
+
 mov ebx, STR_PROTECTED_MODE	;Print message 
 call print_string_32bit
+
 call KERNEL				;Jump to the loaded kernel
+
 jmp $
 
 ;Global variables

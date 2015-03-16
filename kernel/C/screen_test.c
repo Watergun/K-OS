@@ -1,4 +1,4 @@
-//A simple function that tests out all character attributes to be in character mode
+#//A simple function that tests out all character attributes to be in character mode
 void screen_test()
 {
 	char *vidmem = (char*)0xb8000;
