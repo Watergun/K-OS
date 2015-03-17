@@ -1,0 +1,123 @@
+Tabelle für die Tastatur-Codes (alles selbst ausprobiert)
+
+######
+WICHTIG! Codes gelten nur für getestete (QWERTZ) Tastatur
+######
+
+Alle Codes gelten nur für die gedrückte Taste.
+Das Loslassen der jeweiligen Taste erzeugt deren Druck-Code + 0x80
+	Beispiel:	'Q' = 10 -> 90 
+
+CODE (HEX)	TASTE
+01			ESC
+02			1
+03			2
+04			3
+05			4
+06			5
+07			6
+08			7
+09			8
+0A			9
+0B			0
+0C			ß
+0D			´
+0E			RETURN
+0F			TAB
+10			Q
+11			W
+12			E
+13			R
+14			T
+15			Z
+16			U
+17			I
+18			O
+19			P
+1A			Ü
+1B			+
+1C			ENTER
+1D			STRG	
+1E			A	
+1F			S	
+20			D	
+21			F	
+22			G	
+23			H	
+24			J	
+25			K	
+26			L	
+27			Ö	
+28			Ä	
+29			^
+2A			SHIFT (L)
+2B			#
+2C			Y	
+2D			X	
+2E			C	
+2F			V	
+30			B	
+31			N	
+32			M	
+33			,	
+34			.	
+35			-	
+36			SHIFT (R)
+37			FN *
+38			ALT (L)
+39			SPACE
+3A			CAPS LOCK
+3B			F1
+3C			F2
+3D			F3
+3E			F4
+3F			F5
+40			F6
+41			F7
+42			F8
+43			F9
+44			F10
+45			NUM
+46			ROL
+47 			FN 7
+48			FN 8
+49			FN 9
+4A			FN -
+4B			FN 4
+4C			FN 5
+4D			FN 6
+4E			FN +
+4F			FN 1
+50			FN 2
+51			FN 3
+52			FN 0
+53			FN ,
+56 			<
+57			F11
+58			F12
+
+E0 1D		STRG (R)
+
+E0 35		FN /
+
+E0 37 		DRUCK
+E0 38		ALT GR
+E0 47		POS 1
+E0 48		UP
+E0 49		PAGE UP
+
+E0 4B		LEFT 
+
+E0 4D		RIGHT
+E0 4F		ENDE
+E0 50		DOWN
+E0 51		PAGE DOWN
+E0 52		EINFG
+
+E0 53		ENTF
+
+E0 5B		WINDOWS
+E0 5D		LISTEN(?) Taste (links von ALT GR)
+
+E1 1D 45 E1 9D C5 			PAUSE/UNTBR    (Erzeugt alle Codes auf einmal, erzeugt keinen Loslass-Code) 
+		

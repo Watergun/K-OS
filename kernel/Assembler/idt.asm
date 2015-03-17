@@ -15,14 +15,18 @@
 
 ;Whole IDT must equal 256*8 = 2048 bytes
 
-idt_start:
-	;#1	
-	dw	0x0000	;Offset 1
-	dw	0x0008	;Code segment
-	db	0x00		;zero
-	db	0x8e		;32 bit interrupt gate
-	dw	0x0000	;offset 2
+global IDT_START
+global IDT_END
 
-	;#2
-	dw	0x0000
-	
+IDT_START:
+;	#1	
+;	dw	0x0000	;Offset 1
+;	dw	0x0008	;Code segment
+;	db	0x00		;zero
+;	db	0x8e		;32 bit interrupt gate
+;	dw	0x0000	;offset 2
+
+times 48 dq 0x00008e0000080000
+
+
+IDT_END:
