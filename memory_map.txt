@@ -1,0 +1,17 @@
+Eine Map über den Speicherbereich, der tatsächlich vom BS verwendet werden kann.
+
+0x00000000	-	0x00000499	(IVT und BIOS Data Area können überschrieben werden, wenn nicht mehr benötigt)
+			= 0x500	=> 1.25 kB
+
+0x00000500	-	0x00007bff		(Nach IVT und BDA und vor Bootsector)
+			= 0x76ff => ~ 30 kB
+
+0x00007e00	-	0x0007ffff		(Nach Bootsector)
+			= ~ 480.5 kB
+
+0x00080000	-	0x0009fbff		(Vor BSDA, der auch größer sein kann und dann teilweise 
+			= ~ 120 kB				diesen Speicherbereich mit einnimmt)
+			
+
+über 0x00100000 (1 MiB) ist der Speicher nicht klar definierbar
+INT 0x15 EAX=0xE820 kann verwendet werden, um Informationen über diesen Speicherbereich zu sammeln

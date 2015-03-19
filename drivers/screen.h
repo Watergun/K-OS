@@ -5,7 +5,7 @@
 
 //Some color attributes (Text Mode)
 
-#define TM_DEFAULT_STYLE 0x0f
+#define TM_DEFAULT_STYLE 0x0E
 
 #define TM_BLACK		0x0
 #define TM_BLUE		0x1

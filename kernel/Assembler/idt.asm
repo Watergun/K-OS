@@ -28,5 +28,4 @@ IDT_START:
 
 times 48 dq 0x00008e0000080000
 
-
-IDT_END:
+IDT_END: 

@@ -1,9 +1,12 @@
 ;K-OS Interrupt Service Routines INT 0 - 48
 
+;Here, all the interrupt routines are defined
+;Every interrupt routine (IR) has to send the End Of Interrupt signal 
+;to the PIC before returning with the 'iret' command 
+
 [extern PIC_EOI]
-[extern Keyboard_Code]
-[extern TM_print_byte_hex]
-[extern print_char]
+[extern keyboard_code]
+[extern pass_character]
 
 ;global ISR_0h
 ;global ISR_1h
@@ -30,29 +33,39 @@ ISR_20h:		;Hardware Interrupt [Ring 0] (Timer)
 	iret
 	
 ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
+	
+	;This interrupt routine handles the keyboard
+	;First check if a pressed key caused the interrupt
 	pusha	
 	mov dx, 0x64
 	in al, dx
 	and al, 0x01	
 	jz .end
 
+	;Get the keyboard scan code on port 0x60
 	mov dx, 0x60
 	in al, dx
 
-	;push ax
-	;call Keyboard_Code
-	;pop bx
+	;Convert the keyboard scan code to an ascii character
+	push eax
+	call keyboard_code
+	pop ebx
 
-	push 0x00F0
-	push ax
-	call print_char
-	pop ax
-	pop ax
+	;Unusable/Unsupported key
+	cmp al, 0
+	je .end
 
+	;Pass the character to the active program
+	push eax
+	call pass_character
+	pop eax	
+
+	;Return from interrupt routine
 	.end:
 	call PIC_EOI
 	popa
 	iret
+
 
 ;
 ;ISR_22h not implemented (!) because:
