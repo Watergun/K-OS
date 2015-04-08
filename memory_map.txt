@@ -15,3 +15,4 @@ Eine Map über den Speicherbereich, der tatsächlich vom BS verwendet werden kan
 
 über 0x00100000 (1 MiB) ist der Speicher nicht klar definierbar
 INT 0x15 EAX=0xE820 kann verwendet werden, um Informationen über diesen Speicherbereich zu sammeln
+

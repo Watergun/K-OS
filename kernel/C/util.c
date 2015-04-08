@@ -83,3 +83,11 @@ void tm_print_byte_hex(char val)
      tm_print_char(hex2, TM_COLORS(TM_RED, TM_GREEN));
      tm_print_char(' ', TM_COLORS(0, TM_GREEN));
 }
+
+void tm_print_dword(int val)
+{
+	tm_print_char(val, TM_DEFAULT_STYLE);
+	tm_print_char(val >> 8, TM_DEFAULT_STYLE);
+	tm_print_char(val >> 16, TM_DEFAULT_STYLE);
+	tm_print_char(val >> 24, TM_DEFAULT_STYLE);
+}

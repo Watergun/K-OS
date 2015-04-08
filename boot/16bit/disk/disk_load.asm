@@ -1,15 +1,17 @@
-;load DH sectors to EX:BX from drive DL
+;load DH sectors to EX:BX from drive DL, (Assume Partition Table is at 0x7be)
 disk_load:
 push dx		;store DX on stack so later we can recall how many sectory were
 			;requested to be read
 
-call print_hex	;DEBUG reasons
+call print_hex	;DEBUG reasons	
 
 mov ah, 0x02	;BIOS read sector function
 mov al, dh	;Read DH Sectors
-mov dh, 0x00 	;Head 0
-mov ch, 0x00	;Cylinder 0
-mov cl, 0x02	;Start reading from the second sector (i.e. after the boot_sector)
+mov dh, byte [0x7bf] ;Head
+mov ch, byte [0x7c1] ;Cylinder
+mov cl, byte [0x7c0] ;Sector 
+inc cl
+and cl, 0x3f	;Just 6 bits are for sectors
 
 int 0x13		;BIOS interrupt
 

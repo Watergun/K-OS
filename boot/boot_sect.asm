@@ -10,6 +10,10 @@ mov [DRIVE_NO], dl			;BIOS stores our boot drive in DL (0x80 for primary harddri
 mov bp, 0x9000				;Setup the stack
 mov sp, bp
 
+;mov bl, 'X'
+;call print_char
+;jmp $
+
 call load_kernel			;Load the kernel
 
 call switch_to_pm				;Switch to 32 bit protected mode
@@ -26,7 +30,7 @@ mov bx, STR_LOAD_KERNEL		;Print a booting kernel loading message
 call print_string
 
 mov bx, KERNEL				;Setup paramters for disk_load function
-mov dh, 0x15				;15 sectors (will mostly load fewer sectors)
+mov dh, 0x30				;30h sectors (will mostly load fewer sectors)
 mov dl, [DRIVE_NO]
 call disk_load
 ret
@@ -53,5 +57,8 @@ STR_PROTECTED_MODE	db "BOOTING OS... ", 0
 STR_LOAD_KERNEL 	db "LOADING KERNEL... ", 0
 
 ;Bootsector padding
-times 510-($-$$) db 0
-dw 0xaa55
+times 508-($-$$) db 0
+dd 0xaa55dada
+
+;First Sector padding
+;times (2048-512) db 0 

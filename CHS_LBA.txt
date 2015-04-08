@@ -1,0 +1,34 @@
+Diese Datei enthält Informationen über CHS und LBA 
+
+Beispielsweise zeigt die Partitionstabelle der MBR an der Stelle 0x1be:
+80 20 21 00 83 50 3e 01 00 08 00 00 af e2 42 25
+
+Daraus kann entnommen werden:
+
+starting head: 20h		= 32
+starting sector: 21h	= 33
+starting cylinder: 00h	= 0
+system ID: 83h			= 131
+ending head: 50h		= 80
+ending sector: 3Eh		= 62
+ending cylinder: 01h	= 1
+relative sector: 800h	= 2048
+total sectors: 2542E2AFh	= 625140399
+
+### SEKTOR ANGABEN ###
+
+Tracks = Cylinder * Heads
+Sectors = Tracks * Sectors/Track = LBA Blocks
+Kapazität = Sectors * Sectorsize [512 Byte] = Cylinder * Heads * Sectors/Track
+
+HEADS = Gesamte Anzahl an Heads
+S/T = Sectors per Track
+C/H/S = Einzusetzende CHS Koordinate
+
+Bestimmter LBA-Block:
+LBA = C * HEADS * S/T + H * S/T + (S-1)
+
+Bestimmte CHS-Koordinate: 
+C = LBA / (HEADS*S/T)
+H = (LBA % (HEADS*S/T)) / S/T
+S = LBA % S/T  

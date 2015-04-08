@@ -21,6 +21,8 @@ void main()
 
 	terminal_set_statement();
 
+	cpuid();
+
 	//End in the kernel loop
 	while(1);
 }

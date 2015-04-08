@@ -1,2 +1,2 @@
 # K-OS
-A little OS being developed
+Ein kleines Betriebssystem in der Anfangsphase

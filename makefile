@@ -16,6 +16,10 @@ all: os-image
 run: all
 	qemu-system-x86_64 os-image -no-reboot
 
+#Master Boot Record (standalone)
+mbr: boot/mbr.asm
+	nasm -f bin $^ -o mbr.bin
+
 #This is the actual disk image that the computer loads,
 #which is the combination of our compiled bootsector and kernel
 os-image: boot/boot_sect.bin kernel.bin

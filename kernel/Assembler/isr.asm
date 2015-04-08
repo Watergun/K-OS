@@ -7,6 +7,7 @@
 [extern PIC_EOI]
 [extern keyboard_code]
 [extern pass_character]
+[extern tm_print_char]
 
 ;global ISR_0h
 ;global ISR_1h
@@ -73,41 +74,86 @@ ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
 ;
 
 ISR_23h:		;Hardware Interrupt [Ring 0] (COM2) Serial Port 2 & 4
+     push eax
+     push 0x4F
+     push 'A' 
+     call tm_print_char
+     pop eax 
+     pop eax
+     pop eax
+
 	call PIC_EOI
 	iret
 
 ISR_24h:		;Hardware Interupt [Ring 0] (COM1) Serial Port 1 & 3
-	mov byte [0xb8002], 'M'
-	mov byte [0xb8003], 0x45
+	push eax
+     push 0x4F
+     push 'B' 
+     call tm_print_char
+     pop eax 
+     pop eax
+     pop eax
 	call PIC_EOI
 	iret		
 	
 ISR_25h:		;Hardware Interrupt [Ring 0] (Sound Card)
+	push eax
+     push 0x4F
+     push 'C'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
 	call PIC_EOI
 	iret
 
 ISR_26h:		;Hardware Interrupt [Ring 0] (Floppy Disk Controller)
+	push eax
+     push 0x4F
+     push 'D'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
+
 	call PIC_EOI
 	iret
 
 ISR_27h:		;Hardware Interrupt [Ring 0] (Parallel Port) (Mostly Fake IRQ)
+	push eax
+     push 0x4F
+     push 'E'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
 	call PIC_EOI
 	iret
 
 ISR_28h:		;Hardware Interrupt [Ring 0] (Real Time Clock)
 	push eax
-     mov byte al, byte [0xb8004]
-     inc al
-     mov byte [0xb8004], al
-     mov byte [0xb8005], 0x47
+     push 0x4F
+     push 'F'
+     call tm_print_char
+     pop eax
+     pop eax
      pop eax
 
 	call PIC_EOI
 	iret
 
 ISR_29h:		;Hardware Interrupt [Ring 0] (Open Interrupt)
-	mov byte [0xb8002], 'M'
-     mov byte [0xb8003], 0x45
+	push eax
+     push 0x4F
+     push 'G'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
      call PIC_EOI
      iret
 
@@ -116,16 +162,39 @@ ISR_29h:		;Hardware Interrupt [Ring 0] (Open Interrupt)
 	iret
 
 ISR_2Ah:		;Hardware Interrupt [Ring 0] (Open Interrupt)
+	push eax
+     push 0x4F
+     push 'H'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
+
 	call PIC_EOI
 	iret
 
 ISR_2Bh:		;Hardware Interrupt [Ring 0] (Open Interrupt)
+	push eax
+     push 0x4F
+     push 'I'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
 	call PIC_EOI
 	iret
 
 ISR_2Ch:       ;Hardware Interrupt [Ring 0] (PS/2 Mouse)
-	mov byte [0xb8002], 'M'
-     mov byte [0xb8003], 0x45
+	push eax
+     push 0x4F
+     push 'J'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
      call PIC_EOI
      iret
 
@@ -134,10 +203,26 @@ ISR_2Dh:       ;Hardware Interrupt [Ring 0] (Floating Point Unit / Coprocessor)
 	iret
 
 ISR_2Eh:       ;Hardware Interrupt [Ring 0] (Primary ATA Hard Disk)
+	push eax
+     push 0x4F
+     push 'K'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
 	call PIC_EOI
 	iret
 
 ISR_2Fh:       ;Hardware Interrupt [Ring 0] (Secondary ATA Hard Disk)
+	push eax
+     push 0x4F
+     push 'L'
+     call tm_print_char
+     pop eax
+     pop eax
+     pop eax
+
 	call PIC_EOI
 	iret
 
