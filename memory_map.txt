@@ -6,6 +6,8 @@ Eine Map über den Speicherbereich, der tatsächlich vom BS verwendet werden kan
 0x00000500	-	0x00007bff		(Nach IVT und BDA und vor Bootsector)
 			= 0x76ff => ~ 30 kB
 
+[0x00007c00: Bootsector = 512 Byte]
+
 0x00007e00	-	0x0007ffff		(Nach Bootsector)
 			= ~ 480.5 kB
 
@@ -16,3 +18,18 @@ Eine Map über den Speicherbereich, der tatsächlich vom BS verwendet werden kan
 über 0x00100000 (1 MiB) ist der Speicher nicht klar definierbar
 INT 0x15 EAX=0xE820 kann verwendet werden, um Informationen über diesen Speicherbereich zu sammeln
 
+WICHTIG: Das Betriebssystem befindet sich an Stelle 0x1000 !
+		Der Stack befindet sich an Stelle 0x90000 !
+
+
+IDEE: Blockgröße: 4096 Bytes = 4 kB je Programm reserviert
+	 4096 = 0x1000
+
+EFFEKTIV GEBRAUCHBARER SPEICHER
+
+{Platz für BS-Code: 0xf000 = 61 kB}
+{Platz für Stack: 0x10000 = 65 kB}
+
+0x00000500 - 0x00001000 (Vor BS) 			=	0x500  	= 1.28 kB
+0x00010000 - 0x00080000 (Nach BS, vor Stack)	= 	0x80000	= 524 kB
+0x00100000 - ?????????? (Nach BSDA)

@@ -30,6 +30,13 @@ global ISR_2Fh
 global ISR_30h
 
 ISR_20h:		;Hardware Interrupt [Ring 0] (Timer)
+	push eax
+	mov eax, dword [0x500]
+	inc eax
+
+	mov dword [0x500], eax
+.end
+	pop eax
 	call PIC_EOI
 	iret
 	

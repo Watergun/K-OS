@@ -30,7 +30,7 @@ mov bx, STR_LOAD_KERNEL		;Print a booting kernel loading message
 call print_string
 
 mov bx, KERNEL				;Setup paramters for disk_load function
-mov dh, 0x30				;30h sectors (will mostly load fewer sectors)
+mov dh, 0x30				;30h S = 3*16 S = 48 S = 24,5 kB
 mov dl, [DRIVE_NO]
 call disk_load
 ret

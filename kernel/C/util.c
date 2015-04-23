@@ -6,16 +6,44 @@ char digit_to_char(short);
 void tm_print_hex(int);
 char hex_to_char(short);
 void tm_print_memory(char *, int);
-void tm_print_byte_Hex(char);
+void tm_print_byte_hex(char);
+void tm_print_dword(int);
 
 /*Copy bytes from one place to another		*/
 void memory_copy(char *source, char *destination, int size)
 {
 	unsigned int i;
 	for(i = 0; i < size; i++)
+	{
 		destination[i] = source[i];
+	}
 }
 
+/*Copy bytes from one place to another (in reverse)	*/
+void memory_copy_rev(char *source, char *destination, int size)
+{
+	unsigned int i;
+	for(i = 1; i <= size; i++)
+	{
+		destination[size-i] = source[size-i];
+	}
+}
+
+//overwrites the given memory with zeros
+void flash_memory(char *address, int bytes)
+{
+	int i = 0;
+	for(i; i < bytes; i++)
+		address[i] = 0;
+}
+
+//Converts a digit to its ASCII character
+char digit_to_char(short digit)
+{
+     return (char) (digit + 0x30);
+}
+
+//Converts a number to its ASCII string representation
 void itoa(int number, char* buffer)
 {	
 	short i = 0;
@@ -33,12 +61,6 @@ void itoa(int number, char* buffer)
 		buffer[i-1] = digit_to_char(number % 10);
 		number /= 10;
 	}
-}
-
-//Converts a digit to its ASCII-character
-char digit_to_char(short digit)
-{
-	return (char) (digit + 0x30);
 }
 
 //Prints a hexadecimal value (32bit -> 8 hex characters)
@@ -79,9 +101,9 @@ void tm_print_byte_hex(char val)
 	char hex1 = hex_to_char((val & 0xF0) >> 4);
      char hex2 = hex_to_char(val & 0x0F);
 
-     tm_print_char(hex1, TM_COLORS(TM_RED, TM_GREEN));
-     tm_print_char(hex2, TM_COLORS(TM_RED, TM_GREEN));
-     tm_print_char(' ', TM_COLORS(0, TM_GREEN));
+     tm_print_char(hex1, TM_COLORS(TM_WHITE, TM_BLUE));
+     tm_print_char(hex2, TM_COLORS(TM_WHITE, TM_BLUE));
+     tm_print_char(' ', TM_COLORS(0, TM_BLUE));
 }
 
 void tm_print_dword(int val)

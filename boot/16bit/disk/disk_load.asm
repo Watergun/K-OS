@@ -7,11 +7,15 @@ call print_hex	;DEBUG reasons
 
 mov ah, 0x02	;BIOS read sector function
 mov al, dh	;Read DH Sectors
-mov dh, byte [0x7bf] ;Head
-mov ch, byte [0x7c1] ;Cylinder
-mov cl, byte [0x7c0] ;Sector 
-inc cl
-and cl, 0x3f	;Just 6 bits are for sectors
+
+;mov dh, byte [0x7bf] ;Head
+mov dh, 0x0
+;mov ch, byte [0x7c1] ;Cylinder
+mov ch, 0x0
+;mov cl, byte [0x7c0] ;Sector 
+mov cl, 0x02
+;inc cl
+;and cl, 0x3f	;Just 6 bits are for sectors
 
 int 0x13		;BIOS interrupt
 

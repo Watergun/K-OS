@@ -1,38 +1,27 @@
 ;First memory manager that uses the free space in the lower Mbyte (see memory_map.txt)
 ;to reserve memory
 
-;0x500 - 0x7bff
-;
+;It splits the memory in units a 4 kB
 
-[global reserve_dword]
-[global reserve_memory]
+;0x500 - 0x1000 [HALF UNIT], used for system variables (fixed)
+;0x500: time (16 byte)
 
-SPACE_POINTER	dd 0x00000500
+[global reserve_unit]
+[global space_pointer]
 
-reserve_dword:
-.stage1:
-	mov eax, dword [SPACE_POINTER]
-	mov ebx, eax
-	add ebx, 0x04
-	mov dword [SPACE_POINTER], ebx
-	cmp dword [SPACE_POINTER], 0x00007bff
-	jl .end
-	cmp dword [SPACE_POINTER], 0x00007e00
-	jl .stage2
-	cmp dword [SPACE_POINTER], 0x0007ffff
-	jl .end
-	cmp dword [SPACE_POINTER], 0x00100000
-	jl .stage3
+SPACE_POINTER	dd 0x00010000			;begins after the OS
+
+reserve_unit:
+	mov eax, dword [SPACE_POINTER]	;load space pointer
+	add eax, 0x1000				;add unitsize to pointer
+	cmp eax, 0x00080000				;watch out for Stack
+	jl .end						
+	mov eax, 0x00100000				;1 MB Line
 .end:
+	mov dword [SPACE_POINTER], eax	;save new space pointer
+	ret	
+
+space_pointer:						;just returns the space pointer
+	mov eax, dword [SPACE_POINTER]
 	ret
-
-.stage2:
-	mov dword [SPACE_POINTER], 0x00007c00
-	jmp .end
-
-.stage3:
-	mov dword [SPACE_POINTER], 0x00100000
-	jmp .end
-
-
-reserve_memory:
+	

@@ -3,32 +3,30 @@
 
 KERNEL_ENTRY = kernel/Assembler/kernel_entry.asm
 
-C_SOURCES = $(wildcard kernel/C/*.c drivers/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h)
-ASM_SOURCES = $(filter-out $(KERNEL_ENTRY), $(wildcard kernel/Assembler/*.asm)) $(wildcard drivers/*asm) 
+C_SOURCES = $(wildcard kernel/C/*.c drivers/*.c prog/*.c)
+HEADERS = $(wildcard kernel/C/*.h drivers/*.h prog/*.h)
+ASM_SOURCES = $(filter-out $(KERNEL_ENTRY), $(wildcard kernel/Assembler/*.asm)) $(wildcard drivers/*.asm)
 
 OBJ = $(patsubst %.c, %.o, $(C_SOURCES)) $(patsubst %.asm, %.o, $(ASM_SOURCES))
 
 #Default make target
 all: os-image
 
+dd: all
+	dd if=os-image of=/dev/sdb1
+
 #Run qemu
 run: all
-	qemu-system-x86_64 os-image -no-reboot
-
-#Master Boot Record (standalone)
-mbr: boot/mbr.asm
-	nasm -f bin $^ -o mbr.bin
+	qemu-system-x86_64 /dev/sdb -no-reboot
 
 #This is the actual disk image that the computer loads,
 #which is the combination of our compiled bootsector and kernel
 os-image: boot/boot_sect.bin kernel.bin
 	cat $^ > os-image
 
-
 #Generic compiling
 %.o: %.c ${HEADERS}
-	gcc -ffreestanding $< -I 'drivers/' -I 'kernel/C/' -c -o $@
+	gcc -ffreestanding $< -I 'drivers/' -I 'kernel/C/' -I 'prog/' -c -o $@
 
 #Putting everything together
 kernel.bin: $(patsubst %.asm, %.o, $(KERNEL_ENTRY)) $(OBJ)

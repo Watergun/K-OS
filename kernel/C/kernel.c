@@ -1,6 +1,14 @@
+#define TIME 0x0500
+#include "kernelprograms.h"
+#include "programs.h"
+
 //The main entry for the kernel
 void main()
-{
+{	
+	//Set Timer to 0
+	int *Timer = (int*)TIME;	
+	*Timer = 0;
+	
 	//Initialise Video-output
 	char *video_memory = (char*) 0xb8000;
 	
@@ -19,9 +27,18 @@ void main()
 	//Enable Interrupts	
 	__asm__("sti");	
 
-	terminal_set_statement();
+	//Start Terminal
+	start_process(new_process(terminal, 0, 4032), 0, 0);
+//DEBUG
+//int ptr = new_process(terminal, 0, 4032);
+//tm_print_hex(*((int*)ptr));
+//tm_print_hex(*((int*)ptr+4));
+//tm_print_hex(*((int*)ptr+8));
+//tm_print_hex(*((int*)ptr+12));	
 
-	cpuid();
+
+	//VGA Mode
+	vga_init();
 
 	//End in the kernel loop
 	while(1);

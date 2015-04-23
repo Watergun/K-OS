@@ -50,8 +50,6 @@ void tm_print_char(char character, char attribute_byte)
 	tm_set_cursor(offset);
 }
 
-
-
 int tm_get_screen_offset(int col, int row)
 {
 	int offset = (row*80 + col) * 2;
@@ -136,7 +134,7 @@ int tm_handle_scrolling(int cursor_offset)
 
      //Blank the last line by setting all bytes to 0
 	char *last_line = (char*) tm_get_screen_offset(0, TM_MAX_ROWS-1) + VIDEO_ADDRESS;
-	for(i = 0; i < TM_MAX_COLS; i += 2)
+	for(i = 0; i < TM_MAX_COLS*2; i += 2)
 	{
 		last_line[i] = 0;
 		last_line[i+1] = TM_DEFAULT_STYLE;
@@ -157,5 +155,11 @@ void tm_delete_last()
 	pos -= 2;
 	tm_set_cursor(pos);
 	
-	*((char*)0xb8000+pos) = 0x00;
+	*((char*)0xb8000 + pos) = 0x00;
+}
+
+char tm_read_char(int pos)
+{
+	char c = *((char*)0xb8000 + pos);
+	return c;
 }
