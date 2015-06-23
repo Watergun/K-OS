@@ -21,3 +21,4 @@ Wichtig: Der Bootloader lädt den Kernel von der ersten Partition, die in der MB
 Wer das nicht ändern möchte, kann auch indirekt emulieren, indem "sudo bash hdd_test" ausgeführt wird, wodurch das os-image
 auf die erste Partition der sekundären Festplatte (/dev/sdb) geschrieben wird.
 
+Zum bloßen Testen des Systems existiert seit Neuem auch ein vorkompiliertes Speicherbild ("os-image"), das von QEMU ausgeführt werden kann (i386 oder x86_64). 
