@@ -23,12 +23,13 @@ int memory_view(int argc, char **argv)
 	return 0;
 }
 
-int memory_view_func(char *address, int bytes)
+int memory_view_func(char *address, unsigned int bytes)
 {	
 	if(!address || !bytes)
 		return 1;
-	int index = 0;
+	unsigned int index = 0;
 	for(; index < bytes; index++)
 		tm_print_byte_hex(address[index]);
+
 	return 0;
 }

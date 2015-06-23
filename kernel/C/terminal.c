@@ -3,30 +3,49 @@
 #include "screen.h"
 #include "kernelprograms.h"
 #include "programs.h"
+#include "multitask.h"
+
+#define EXECUTE_LINE 0x0001
 
 //a little pointer for terminal variables
 char *tm_video_buffer;
+
+//Terminal status 
+int terminal_status;
+int mark_distance;
 
 //List of all implemented functions
 int terminal(int, char**);
 void terminal_set_statement();
 void terminal_print_string(char*);
-void terminal_exec_line(int);
+void terminal_exec_line();
 void terminal_pass_char(char);
 void terminal_swap_buffers();
 char **split_exec_line(char *buffer, int *pargc);
 
 int terminal(int argc, char **argv)
 {
-	//Give this terminal process a name	
-	name_process("K-OS Root Terminal");
+	//Give this terminal process a name
+	name_process(__process__, "K-OS Root Terminal");
 
 	//Swap buffer for the terminal (TM)
 	tm_video_buffer = (char*)malloc(4000);
 
+	mark_distance = 0;
+	terminal_status = 0;
 	terminal_set_statement();
 
-	return 0;
+	while(1)
+	{
+		if(terminal_status & EXECUTE_LINE)
+		{
+			terminal_exec_line();
+			terminal_status ^= EXECUTE_LINE;
+		}
+
+          ((char*)VIDEO_ADDRESS)[18] = 'T';
+          ((char*)VIDEO_ADDRESS)[19] = 0x06;	
+	}
 }
 
 void terminal_set_statement()
@@ -43,8 +62,10 @@ void terminal_print_string(char *str)
 	tm_print(str);
 }
 
-void terminal_exec_line(int length)
+void terminal_exec_line()
 {
+	int length = mark_distance;
+
 	// READ COMMAND
 	char *buffer = (char*) malloc(length);	
 
@@ -89,9 +110,12 @@ void terminal_exec_line(int length)
 		result = time(argc, argv);
 	else if(!strcmp("pci", argv[0], len))
 		result = pciforce(argc, argv);
-	else if(!strcmp("vga", argv[0], len))
-		result = vgatest(argc, argv);
-
+	else	if(!strcmp("ktop", argv[0], len))
+		start_process(new_process(desktop, 0, 4096), argc, argv);
+	else if(!strcmp("help", argv[0], len))
+		terminal_print_string("osname, hostname, memoryview, time, pci, ktop, kobra, help");
+	else if(!strcmp("kobra", argv[0], len))
+		start_process(new_process(kobra, 0, 4096), argc, argv);
 //
 	else
 	{
@@ -101,13 +125,18 @@ void terminal_exec_line(int length)
 
 	//handle result...
 
+	//free allocated memory
+	mfree(buffer);
+	for(; argc > 0; argc--)
+		mfree(argv[argc-1]);
+	mfree(argv);
+
+	mark_distance = 0;
 	terminal_set_statement();	
 }
 
 void terminal_pass_char(char c)
 {
-	static int mark_distance = 0;
-
 	if(c == 0x0D)		//Carriage Return
 	{
 		if(mark_distance == 0)
@@ -115,8 +144,8 @@ void terminal_pass_char(char c)
 			terminal_set_statement();
 			return;
 		}
-		terminal_exec_line(mark_distance);
-		mark_distance = 0;
+		//terminal_exec_line(mark_distance);
+		terminal_status |= EXECUTE_LINE;
 	}
 	else if(c == 0x08)	//Backspace
 	{	

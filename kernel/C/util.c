@@ -50,18 +50,18 @@ void itoa(int number, char* buffer)
 	int number_cpy = number;
 	while(number_cpy > 0)
 	{
-		number_cpy /= 10;	
+		number_cpy /= 10;
 		i++;
 	}
 
 	buffer[i] = 0;
-	
+
 	for(;i > 0; i--)
 	{
 		buffer[i-1] = digit_to_char(number % 10);
 		number /= 10;
-	}
-}
+ 	}
+}	
 
 //Prints a hexadecimal value (32bit -> 8 hex characters)
 void tm_print_hex(int value)

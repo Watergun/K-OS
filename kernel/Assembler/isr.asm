@@ -8,6 +8,10 @@
 [extern keyboard_code]
 [extern pass_character]
 [extern tm_print_char]
+[extern tm_print_hex]
+[extern ph_switch_process]
+[extern memory_view_func]
+[extern __process__]
 
 ;global ISR_0h
 ;global ISR_1h
@@ -30,24 +34,117 @@ global ISR_2Fh
 global ISR_30h
 
 ISR_20h:		;Hardware Interrupt [Ring 0] (Timer)
+	;This interrupt takes the role of the process switcher
+	;Everytime this timer ticks, the processhandler switches to the next process in the chain
+
+	;Increment tickcounter
 	push eax
+	push edx
+
 	mov eax, dword [0x500]
 	inc eax
-
 	mov dword [0x500], eax
-.end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;DEBUG: Reduce switching speed
+;	mov edx, 0
+;	push ebx
+;	mov ebx, 0x08
+;	div ebx
+;	pop ebx
+;	cmp edx, 1
+;
+;	jz .continue
+;
+;	pop edx
+;	pop eax
+;	jmp .skip
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.continue:
+	pop edx
 	pop eax
+
+	;Save Registers on the stack
+	pushad 	;Now we've got all the registers on the stack (EDI,ESI,EBP,ESP,EBX,EDX,ECX,EAX,EIP,CS,EFLAGS)
+			;	offsets:							  0	 4	8   12  16  20  24  28  32  36 40
+
+	;Move them to their PSS
+	mov eax, [__process__]
+
+	cmp eax, 0			;Happens, when the kernel is called for the first time
+	jz .switch
+
+	add eax, 13 * 4		;Get to the PSS address (e.g. pss = process[13])
+	mov eax, dword [eax]
+	mov ebx, dword [esp+32]
+	mov [eax+4], ebx		;EIP
+	mov ebx, dword [esp+28]
+	mov [eax+8], ebx		;EAX
+	mov ebx, dword [esp+24]
+	mov [eax+12], ebx		;ECX
+	mov ebx, dword [esp+20]
+     mov [eax+16], ebx        ;EDX
+ 	mov ebx, dword [esp+16]
+     mov [eax+20], ebx        ;EBX
+ 	mov ebx, dword [esp+12]
+     mov [eax+24], ebx        ;ESP
+ 	mov ebx, dword [esp+8]
+     mov [eax+28], ebx        ;EBP
+ 	mov ebx, dword [esp+4]
+     mov [eax+32], ebx        ;ESI
+ 	mov ebx, dword [esp]
+     mov [eax+36], ebx        ;EDI
+ 	mov ebx, dword [esp+40]
+     mov [eax+40], ebx        ;EFLAGS
+
+.switch:	;Activate the new process
+
+	call ph_switch_process	;Returns the pss of the new process
+	cmp eax, 0
+	jz .end
+
+	add eax, 40			;Get to the EFLAGS
+	add esp, 44			;Now ESP points right behind EFLAGS
+	push dword [eax]		;EFLAGS
+	push dword 0x08		;CS
+	sub eax, 36
+	push dword [eax]		;EIP
+	add eax, 4
+	push dword [eax]		;EAX
+	add eax, 4
+	push dword [eax]		;ECX
+	add eax, 4
+	push dword [eax]		;EDX
+	add eax, 4
+	push dword [eax]		;EBX
+	add eax, 4
+	push dword [eax]		;ESP
+	add eax, 4
+	push dword [eax]		;EBP
+	add eax, 4
+	push dword [eax]		;ESI
+	add eax, 4
+	push dword [eax]		;EDI
+
+
+.end:
+	popad			;Now all registers are restored
+.skip:
 	call PIC_EOI
+
+	;The next instruction returns to the stack-saved CS:EIP position with EFLAGS
 	iret
-	
+
 ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
-	
+
 	;This interrupt routine handles the keyboard
 	;First check if a pressed key caused the interrupt
-	pusha	
+
+	pushad
 	mov dx, 0x64
 	in al, dx
-	and al, 0x01	
+	and al, 0x01
 	jz .end
 
 	;Get the keyboard scan code on port 0x60
@@ -66,14 +163,13 @@ ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
 	;Pass the character to the active program
 	push eax
 	call pass_character
-	pop eax	
+	pop eax
 
 	;Return from interrupt routine
 	.end:
 	call PIC_EOI
-	popa
+	popad
 	iret
-
 
 ;
 ;ISR_22h not implemented (!) because:

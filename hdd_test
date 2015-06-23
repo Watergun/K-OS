@@ -1,2 +1,2 @@
 dd if=os-image of=/dev/sdb1
-qemu-system-x86_64 /dev/sdb1
+qemu-system-x86_64 /dev/sdb

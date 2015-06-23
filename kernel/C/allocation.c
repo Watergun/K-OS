@@ -11,11 +11,13 @@
 
 #include "multitask.h"
 #include "screen.h"
+#include "memory.h"
 
 int allocate_data(int process_address, int size)
 {
 //DEBUG
 //tm_print_char('A', TM_COLORS(TM_BLACK, TM_GREEN));
+//tm_print_hex(process_address);
 
 	//Make datasize to a multiple of 4
 	size = 4 * (size/4 + 1);
@@ -31,7 +33,7 @@ int allocate_data(int process_address, int size)
 	int lastptr = 0;
 	int insert = 0;
 	
-	while(index < 504)
+	while(index < 1008)
 	{
 		//1. [get pointer]
 		int ptr = apt[index];
@@ -362,10 +364,45 @@ int get_unit_by_address(int process_address, int address)
 
 
 //Service routine to look for empty APT entries and fix them
-//(also: reordering its entries
+//also: reordering its entries
 void apt_service_routine()
 {
-	//TODO: write code
+	//This APT Service checks the active APT
+	int index = 0;
+	int *apt = (int*) ((int*)__process__)[12];
+	int lastptr = 0;
+
+	while(index < 1008)
+	{
+		int ptr = apt[index];		
+
+		//Hole in APT found 
+		if(ptr == 0xFFFF)
+		{	
+//DEBUG
+//tm_print_char('O', TM_COLORS(TM_BLUE, TM_RED));
+//memory_view_func(&apt[index], 16);
+//tm_print_char('|', TM_COLORS(TM_BLUE, TM_RED));
+			//Simply move everything one APT entry further to the front
+			memory_copy(&apt[index+2], &apt[index], 4032 - (index*4));
+			flash_memory(((int)apt) + 4024, 8);
+			
+//memory_view_func(&apt[index], 16);
+		}
+		
+		//Deletion needed (however this came)
+		else if(ptr == lastptr && ptr != 0)
+		{
+			//delete APT entry
+			apt[index] = 0;
+			apt[index+1] = 0;
+
+			//let the next loop fix that
+			index -= 2;
+		}
+	
+		index += 2;
+	}
 }
 
 
@@ -373,13 +410,73 @@ void apt_service_routine()
 //Will be substituted by a better function, when multicore using is activated
 char* malloc(int size)
 {
-	return (char*) allocate_data(active_process, size);
+	return (char*) allocate_data(__process__, size);
 	//return 0x00100000;
 }
 
-//Frees the speicified memory 
+//Frees the specified memory 
 void mfree(int address)
 {
-	//1. l
+//DEBUG
+//tm_print_char('(', TM_DEFAULT_STYLE);
+//tm_print_hex(address);
+//tm_print_char(')', TM_DEFAULT_STYLE);
 
+	int *apt = (int*) ((int*)__process__)[12];
+	apt = (int*) (((int)apt)+64);
+	
+	//some error
+	if(!address || !apt)
+		return;
+
+	//Find the given address in the apt
+	int index = 0;
+	while(index < 1008)
+	{
+		int ptr = apt[index];
+//DEBUG
+//tm_print_hex(ptr);
+//tm_print_char(':', TM_DEFAULT_STYLE);	
+
+		//APT ended before address could be found (maybe apt_service_routine doesn't work?)
+		if(index != 0 && ptr == 0)
+			return;
+
+		int address_it = translate_apt_pointer(__process__, ptr);
+
+
+//DEBUG		
+//tm_print_hex(address_it);
+
+		//Could not find address
+		if(address_it == 0)
+			return;
+	
+		//the addresses match
+		if(address == address_it)
+		{
+//DEBUG
+//tm_print_char('F', TM_DEFAULT_STYLE);
+//tm_print_hex(ptr);
+//tm_print_hex(address);
+
+			//Free memory (mark free APT entry with 0xffff
+			apt[index] = 0xFFFF;
+			apt[index+1] = 0;
+
+			//Immediatly call the service routine after this
+			register_kernelevent(apt_service_routine);
+//DEBUG
+//tm_print_char('{', TM_DEFAULT_STYLE);
+//			apt_service_routine();
+//tm_print_char('}', TM_DEFAULT_STYLE);
+	
+			break;
+		}
+		else
+			index += 2;
+	}
+
+	//At this point, the apt is full and no pointer was found
+	return;
 }

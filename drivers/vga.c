@@ -167,41 +167,80 @@ void vga_init()
 
 	port_byte_out(0x3D4, temp);
 
-/*
+
 	//DAC Registers (Color Palette Setting)
-	int color_begin = 0x40;
+	int color_begin = 0x0;
+	int base = 0;
 	port_byte_out(0x3C8, color_begin);
 
-	for(; color_begin < 256; color_begin++)
-	{	
+#ifdef VGA_CP_ASCRGB	
+	int a = 0;
+	for(; a < 6; a++)
+	{
+		int b = 0;
+		for(;b < 6;b++)
+		{
+			int c = 0;
+			for(;c < 6; c++)
+			{
 		//Red
-		port_byte_out(0x3C9, 0);	
+		port_byte_out(0x3C9, a * 12 + base);	
 		//Green	
-		port_byte_out(0x3C9, 0);
+		port_byte_out(0x3C9, b * 12 + base);
 		//Blue
-		port_byte_out(0x3C9, 0);
-	}
-*/
+		port_byte_out(0x3C9, c * 12 + base);
 
-	//Finish!
+		if(c == 0)
+			base = 3;
+			}
+		}
+	}
+#endif
+#ifdef VGA_CP_DEFAULT
+
+
+	//First 16: EGA Colors
+	for(; color_begin < 16; color_begin++)
+	{
+		port_byte_out(0x3C9, (color_begin & 4) * 42 + base);
+		port_byte_out(0x3C9, (color_begin & 2) * 42 + base);
+		port_byte_out(0x3C9, (color_begin & 1) * 42 + base);
 	
+		if(color_begin == 7) base = 0x55;
+	}
+	base = 0;
+
+	//Next 16: Greyscale
+
+	int bases[] = {0x0, 0x14, 0x20, 0x2C, 0x38, 0x45, 0x51,
+				 0x61, 0x71, 0x82, 0x92, 0xA2, 0xB6, 0xCB, 0xE3, 0xFF};
+
+	for(color_begin = 16; color_begin < 32; color_begin++)
+	{
+		port_byte_out(0x3C9, bases[color_begin-16]);
+		port_byte_out(0x3C9, bases[color_begin-16]);
+		port_byte_out(0x3C9, bases[color_begin-16]);
+	}
+
+	//... There are still 216 Colors left	
+
+#endif
+
+	//Finish!	
 	vga_clear_screen();
 
-	char *video_memory = (char*)VGA_VIDEO_MEMORY;
-		
-
-	int i = 0;	
+	int i = 0;
 	for(; i < 200; i++)
-  	{
+	{
 		int j = 0;
 		for(; j < 256; j++)
 		{
 			vga_pixel(j, j, i);
-			
 		}
-	}	
 
+	}
 }
+
 
 //Zeros all bytes
 void vga_clear_screen()
