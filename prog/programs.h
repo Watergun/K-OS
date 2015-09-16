@@ -6,6 +6,6 @@ int kobra			(int, char**);
 int memory_view	(int, char**);
 int pciforce		(int, char**);
 int time			(int, char**);
-int desktop		(int, char**);
+int osname		(int, char**);
 
 #endif

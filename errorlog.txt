@@ -1,0 +1,13 @@
+Der Fehler liegt wahrscheinlich daran, dass bevor der Kernel-
+prozess aufgerufen wird, der initialierende Stackframe durch 
+einen neueren überschrieben wird. Somit kommt es nicht zu einem
+Prozesswechsel, sondern der alte EIP wird immer wieder erneut
+aufgerufen. -> ISR.ASM : Eine Überprüfung von __process__ auf 0
+bringt auch nichts, da der diesen Wert nicht mal im ersten
+Durchlauf annehmen kann. 
+
+Fehlerbehebung:
+global_bootstatus = [1, 2, 3, 4, 5]
+ 
+führt einen Statuswert ein, der anzeigt, ob der Kernel noch im
+init-Modus läuft.

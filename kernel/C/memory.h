@@ -6,8 +6,9 @@
 #define USABLE_UNITSIZE 4032
 #define UNITHEADERSIZE 64
 
-//Functions
-char *malloc(int datasize);
-void mfree(int address);
+//All implemented memory functions (Comment: Except the allocation functions, which are in another file)
+
+//Implemented in Assembler: reserves a memoryblock of size 0x1000 [UNITSIZE] = 4096 Bytes 
+int system_reserve_unit();
 
 #endif

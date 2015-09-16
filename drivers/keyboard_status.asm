@@ -22,6 +22,6 @@ keyboard_xor_status:		;Sets or unsets modifier status flags using the XOR operat
 	mov bl, byte [MODIFIER_STATUS]
 	xor al, bl
 	mov byte [MODIFIER_STATUS], al
-	
+
 	pop ebx
 	ret

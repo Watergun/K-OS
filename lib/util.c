@@ -1,16 +1,9 @@
+#include "util.h"
+#include "stdheader.h"
 #include "screen.h"
 
-void memory_copy(char*,char*,int);
-void itoa(int,char*);
-char digit_to_char(short);
-void tm_print_hex(int);
-char hex_to_char(short);
-void tm_print_memory(char *, int);
-void tm_print_byte_hex(char);
-void tm_print_dword(int);
-
-/*Copy bytes from one place to another		*/
-void memory_copy(char *source, char *destination, int size)
+//Copy bytes from one place to another
+void memory_copy(char *source, char *destination, size_t size)
 {
 	unsigned int i;
 	for(i = 0; i < size; i++)
@@ -19,8 +12,8 @@ void memory_copy(char *source, char *destination, int size)
 	}
 }
 
-/*Copy bytes from one place to another (in reverse)	*/
-void memory_copy_rev(char *source, char *destination, int size)
+//Copy bytes from one place to another (beginning from the back)
+void memory_copy_rev(char *source, char *destination, size_t size)
 {
 	unsigned int i;
 	for(i = 1; i <= size; i++)
@@ -30,7 +23,7 @@ void memory_copy_rev(char *source, char *destination, int size)
 }
 
 //overwrites the given memory with zeros
-void flash_memory(char *address, int bytes)
+void flash_memory(char *address, size_t bytes)
 {
 	int i = 0;
 	for(i; i < bytes; i++)
@@ -86,9 +79,9 @@ char hex_to_char(short digit)
 }
 
 //Print Memory
-void tm_print_memory(char* address, int bytes)
+void tm_print_memory(char* address, size_t bytes)
 {
-	int i;
+	uint i;
 	for(i = 0;i < bytes; i++)
 	{
 		char byte = address[i];
@@ -106,10 +99,12 @@ void tm_print_byte_hex(char val)
      tm_print_char(' ', TM_COLORS(0, TM_BLUE));
 }
 
-void tm_print_dword(int val)
+
+//Prints 4 chars, stored in an 32bit integer
+void tm_print_dword_raw(int val)
 {
-	tm_print_char(val, TM_DEFAULT_STYLE);
-	tm_print_char(val >> 8, TM_DEFAULT_STYLE);
-	tm_print_char(val >> 16, TM_DEFAULT_STYLE);
-	tm_print_char(val >> 24, TM_DEFAULT_STYLE);
+	tm_print_char(val >> 24, TM_COLORS(TM_WHITE, TM_BLACK));
+	tm_print_char((val << 8) >> 24, TM_COLORS(TM_WHITE, TM_BLACK)); 
+	tm_print_char((val << 16) >> 24, TM_COLORS(TM_WHITE, TM_BLACK));
+	tm_print_char((val << 24) >> 24, TM_COLORS(TM_WHITE, TM_BLACK));
 }

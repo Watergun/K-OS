@@ -1,5 +1,5 @@
 ;K-OS INTERRUPT DESCRIPTOR TABLE
-;Table of Interrupt Routine Descriptors
+;Table of Interrupt Routine Descriptors 
 
 ;8byte Structure:
 ;Offset (bit 0-15)		2 byte

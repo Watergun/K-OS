@@ -4,5 +4,6 @@
 			;'main', so the linker can substitute the final address
 call main		;invoke main() in our C kernel
 
+;Jump forever
 jmp $
 

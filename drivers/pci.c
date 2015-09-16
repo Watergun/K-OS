@@ -1,5 +1,6 @@
 //PCI driver
 #include "stdheader.h"
+#include "io_ports.h"
 
 //Reads a word on the specified bus slot offset
 ushort pci_config_read_word(uchar bus, uchar slot, uchar func, uchar offset)

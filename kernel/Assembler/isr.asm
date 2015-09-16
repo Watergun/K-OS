@@ -6,12 +6,15 @@
 
 [extern PIC_EOI]
 [extern keyboard_code]
-[extern pass_character]
+[extern system_pass_character]
 [extern tm_print_char]
 [extern tm_print_hex]
 [extern ph_switch_process]
 [extern memory_view_func]
 [extern __process__]
+[extern __DEBUG_LEVEL__]
+[extern global_bootstatus]
+[extern system_halt_system]
 
 ;global ISR_0h
 ;global ISR_1h
@@ -33,6 +36,7 @@ global ISR_2Eh
 global ISR_2Fh
 global ISR_30h
 
+
 ISR_20h:		;Hardware Interrupt [Ring 0] (Timer)
 	;This interrupt takes the role of the process switcher
 	;Everytime this timer ticks, the processhandler switches to the next process in the chain
@@ -49,7 +53,7 @@ ISR_20h:		;Hardware Interrupt [Ring 0] (Timer)
 ;DEBUG: Reduce switching speed
 ;	mov edx, 0
 ;	push ebx
-;	mov ebx, 0x08
+;	mov ebx, 0xA0
 ;	div ebx
 ;	pop ebx
 ;	cmp edx, 1
@@ -59,82 +63,74 @@ ISR_20h:		;Hardware Interrupt [Ring 0] (Timer)
 ;	pop edx
 ;	pop eax
 ;	jmp .skip
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.continue:
-	pop edx
+	.continue:
+	pop edx	;Obligatory anyway
 	pop eax
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	;If no process exists, skip MT
+;	cmp dword [__process__], 0
+;	je .test
+
+	;The bootstatus is 1 if this routine gets called for the first time
+	cmp dword [global_bootstatus], 1
+	je .skip
 
 	;Save Registers on the stack
 	pushad 	;Now we've got all the registers on the stack (EDI,ESI,EBP,ESP,EBX,EDX,ECX,EAX,EIP,CS,EFLAGS)
 			;	offsets:							  0	 4	8   12  16  20  24  28  32  36 40
 
-	;Move them to their PSS
-	mov eax, [__process__]
+	.switch:	;Activate the new process (e.g. load the new stackmark)
 
-	cmp eax, 0			;Happens, when the kernel is called for the first time
-	jz .switch
+;DEBUG
+;call tm_print_hex ;Print ESP
 
-	add eax, 13 * 4		;Get to the PSS address (e.g. pss = process[13])
-	mov eax, dword [eax]
-	mov ebx, dword [esp+32]
-	mov [eax+4], ebx		;EIP
-	mov ebx, dword [esp+28]
-	mov [eax+8], ebx		;EAX
-	mov ebx, dword [esp+24]
-	mov [eax+12], ebx		;ECX
-	mov ebx, dword [esp+20]
-     mov [eax+16], ebx        ;EDX
- 	mov ebx, dword [esp+16]
-     mov [eax+20], ebx        ;EBX
- 	mov ebx, dword [esp+12]
-     mov [eax+24], ebx        ;ESP
- 	mov ebx, dword [esp+8]
-     mov [eax+28], ebx        ;EBP
- 	mov ebx, dword [esp+4]
-     mov [eax+32], ebx        ;ESI
- 	mov ebx, dword [esp]
-     mov [eax+36], ebx        ;EDI
- 	mov ebx, dword [esp+40]
-     mov [eax+40], ebx        ;EFLAGS
+	;the new switching concept just saves the stackmark / ESP
+	push esp
 
-.switch:	;Activate the new process
+	call ph_switch_process	;Returns the stackmark of the new process
+	add esp, 4
 
-	call ph_switch_process	;Returns the pss of the new process
-	cmp eax, 0
-	jz .end
+	mov [RESULT], eax
 
-	add eax, 40			;Get to the EFLAGS
-	add esp, 44			;Now ESP points right behind EFLAGS
-	push dword [eax]		;EFLAGS
-	push dword 0x08		;CS
-	sub eax, 36
-	push dword [eax]		;EIP
-	add eax, 4
-	push dword [eax]		;EAX
-	add eax, 4
-	push dword [eax]		;ECX
-	add eax, 4
-	push dword [eax]		;EDX
-	add eax, 4
-	push dword [eax]		;EBX
-	add eax, 4
-	push dword [eax]		;ESP
-	add eax, 4
-	push dword [eax]		;EBP
-	add eax, 4
-	push dword [eax]		;ESI
-	add eax, 4
-	push dword [eax]		;EDI
+;cli
+;push 0x0E
+;push 'I'
+;call tm_print_char
+;add esp, 8
 
+;push dword 56
+;push dword [RESULT]
+;call tm_print_hex
+;call memory_view_func
+;add esp, 8
+;jmp system_halt_system
 
-.end:
-	popad			;Now all registers are restored
-.skip:
+	;Check for zero (e.g. switch didn't work / something went definitely wrong)
+	cmp dword [RESULT], 0
+	jz system_halt_system
+
+;push dword 0x45
+;push dword 'F'
+;call tm_print_char
+;add esp, 8
+
+	mov esp, [RESULT]			;activate the new stackmark
+
+;call system_halt_system
+
+	.load:
+	popad			;Now (almost) all registers are restored
+
+	.skip:
 	call PIC_EOI
 
 	;The next instruction returns to the stack-saved CS:EIP position with EFLAGS
 	iret
+
+	RESULT dd 0x0
 
 ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
 
@@ -154,7 +150,7 @@ ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
 	;Convert the keyboard scan code to an ascii character
 	push eax
 	call keyboard_code
-	pop ebx
+	add esp, 4
 
 	;Unusable/Unsupported key
 	cmp al, 0
@@ -162,9 +158,29 @@ ISR_21h:		;Hardware Interrupt [Ring 0] (Keyboard)
 
 	;Pass the character to the active program
 	push eax
-	call pass_character
+	call system_pass_character
 	pop eax
+;
+;DEBUG
+;Print everything about the current process
 
+cmp dword [__DEBUG_LEVEL__], 5		;Debug level 5: All !
+jnz .DEBUG_END
+
+push dword [__process__]
+call tm_print_hex
+
+push dword [esp]
+call tm_print_hex
+
+push esp
+call tm_print_hex
+
+add esp, 16
+
+.DEBUG_END:
+;
+;
 	;Return from interrupt routine
 	.end:
 	call PIC_EOI

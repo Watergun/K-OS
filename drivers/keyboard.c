@@ -1,10 +1,14 @@
-
 //Keyboard_Code searches for the appropriate ASCII-Character
+
+//Impemented in Assembler: checks for key-modifiers (e.g.: STRG)
+extern char keyboard_get_status();
+extern void keyboard_xor_status();
 
 char keyboard_code(unsigned char scancode)
 {
 	short up_case = 0;
 	char status = keyboard_get_status();
+
 	if(status & 0x04)
 	{
 		if(status & 0x02)

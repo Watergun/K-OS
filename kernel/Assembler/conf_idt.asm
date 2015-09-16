@@ -98,7 +98,7 @@ conf_idt:
      call store_routine
 
 	mov eax, ISR_30h
-	mov ebx, 0x2F
+	mov ebx, 0x30
 	call store_routine
 
 ;DEBUG

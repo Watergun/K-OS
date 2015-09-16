@@ -25,7 +25,7 @@ WICHTIG: Das Betriebssystem befindet sich an Stelle 0x1000 !
 IDEE: Blockgröße: 4096 Bytes = 4 kB je Programm reserviert
 	 4096 = 0x1000
 
-EFFEKTIV GEBRAUCHBARER SPEICHER
+EFFEKTIV BRAUCHBARER SPEICHER
 
 {Platz für BS-Code: 0xf000 = 61 kB}
 {Platz für Stack: 0x10000 = 65 kB}

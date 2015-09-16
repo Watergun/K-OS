@@ -1,13 +1,20 @@
 #define TIME 0x0500
-#include "kernelprograms.h"
+//#define DEBUG_LEVEL_ALL
+
+#include "system.h"
+#include "process.h"
 #include "programs.h"
 #include "globalstatus.h"
 #include "memory.h"
 #include "multitask.h"
 #include "screen.h"
+#include "kernel.h"
+#include "terminal.h"
 
 //Prototpe of the kernel process
 void kernel_main(int, char**);
+extern void PIC_remap();
+extern void load_IDT();
 
 //The main entry of the kernel
 void main()
@@ -15,6 +22,8 @@ void main()
 	//Set Timer to 0
 	int *Timer = (int*)TIME;
 	*Timer = 0;
+
+	global_bootstatus = 1;
 
 	//Initialise textmode
 	tm_clear_screen();
@@ -34,21 +43,41 @@ void main()
 	__asm__("sti");
 
 	//Memory and process manager
-	memory_manager_init();
+	system_process_manager_init();
 
 	//Self-representation as kernel process
-	int *kernel_process = (int*) reserve_unit();
+	int *kernel_process = (int*) system_reserve_unit();
 	kernel_process[0] = 0;
 	kernel_process[1] = UNITSIZE;
 	kernel_process[2] = 0;
 	kernel_process[3] = 1;		//The kernel has ID 1
-	name_process(kernel_process, "KERNEL");
-	kernel_process[11] = (int) kernel_main;
+	system_name_process((int)kernel_process, "KERNEL");
+	kernel_process[11] = (int)kernel_main;
 	kernel_process[14] = 0x90000;		//Reset the kernel's stack
 
-	start_process(kernel_process, 0, 0);
+	//POSSIBLE ERROR: NO APT ! TODO !
 
-	//Waiting for the ISR to call our kernel
+
+	//For simplicity, 0x90000 is a stack block
+	*((int*)(0x90000+4*14)) = 0x90000;
+
+	//Set current process
+	__process__ = (int)kernel_process;
+	__SYSTEM_PROCESS__ = (int)kernel_process;
+
+	system_start_process((int)kernel_process, 0, 0);
+
+	//
+	global_bootstatus = 2;
+
+//int addr = ((int*)kernel_process[14])[14];
+//tm_print_hex(addr);
+//memory_view_func(((int*)kernel_process[14])[14], 0x40);
+//tm_print_char('K', TM_COLORS(TM_BLUE, TM_BLACK));
+//tm_print_hex(kernel_main);
+//tm_print_hex(&addr);
+
+	//Waiting for the ISR to call our kernel process
 	while(1);
 }
 
@@ -57,8 +86,11 @@ void kernel_main(int args, char **argv)
 {
 	//Arguments are zero, but are an obligation
 
+	__SYSTEM_PROCESS__ = __process__;
+	global_bootstatus = 3;
+
 	//Start Terminal
-	start_process(new_process(terminal, 0, 4032), 0, 0);
+	system_start_process(system_new_process((int)terminal, 0, 4032), 0, 0);
 
 	int c = tm_get_cursor();
 	tm_print_at("RUNNING:", 0, 0);
@@ -67,6 +99,10 @@ void kernel_main(int args, char **argv)
 	//kernel_status_update();
   	while(1)
 	{
+		//The kernel has no inbox. Better: events, to execute s specific function with an argument
+		kernel_start_event();
+
+		//Indicate a running kernel in text-mode
 		((char*)VIDEO_ADDRESS)[18] = 'K';
 		((char*)VIDEO_ADDRESS)[19] = 0x05;
 	}

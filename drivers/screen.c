@@ -1,26 +1,18 @@
 #include "screen.h"
+#include "util.h"
+#include "io_ports.h"
 
-//Overview of all functions
-void tm_print_char(char, char);
-int tm_get_screen_offset(int,int);
-int tm_get_cursor();
-void tm_set_cursor(int);
-void tm_print_at(char*,int,int);
-void tm_print(char*);
-void tm_clear_screen();
-int tm_handle_scrolling(int);
-
-/* Print a char on the screen at col, row, or at cursor position	 */
+// Print a char on the screen at col, row, or at cursor position
 void tm_print_char(char character, char attribute_byte)
 {
-	/*Create a pointer to the start of video memory 	*/
+	//Create a pointer to the start of video memory
 	unsigned char *vidmem = (unsigned char*) VIDEO_ADDRESS;
 
-	/*If attribute byte is zero, assume the default style		*/
+	//If attribute byte is zero, assume the default style
 	if (!attribute_byte)
 		attribute_byte = TM_DEFAULT_STYLE;
 
-	/*Get the video memory offset for the screen location		*/
+	//Get the video memory offset for the screen location
 	int offset = tm_get_cursor();
 		
 	//If we see a newline character, set offset to the end of current row,
@@ -50,6 +42,7 @@ void tm_print_char(char character, char attribute_byte)
 	tm_set_cursor(offset);
 }
 
+//Calculates from coordinates to offset
 int tm_get_screen_offset(int col, int row)
 {
 	int offset = (row*80 + col) * 2;
@@ -108,7 +101,7 @@ void tm_clear_screen()
 
 	tm_get_cursor(0);
 
-	/* Loop through video memory and write blank characters 	*/
+	// Loop through video memory and write blank characters
 	for(row = 0; row < TM_MAX_ROWS; row++)
 		for(col = 0; col < TM_MAX_COLS; col++)
 			tm_print_char(' ', TM_DEFAULT_STYLE);
@@ -118,7 +111,7 @@ void tm_clear_screen()
 }
 
 
-/*Advance the text cursor, scrolling the video buffer if necessary      */
+//Advance the text cursor, scrolling the video buffer if necessary
 int tm_handle_scrolling(int cursor_offset)
 {
 	//If the cursor is within the screen, return it unmodified
@@ -128,8 +121,8 @@ int tm_handle_scrolling(int cursor_offset)
 	//Shuffle the rows back one
 	unsigned int i;
 	for(i = 1; i < TM_MAX_ROWS; i++)
-		memory_copy(tm_get_screen_offset(0, i) + VIDEO_ADDRESS,
-                      tm_get_screen_offset(0, i-1) + VIDEO_ADDRESS,
+		memory_copy((char*) tm_get_screen_offset(0, i) + VIDEO_ADDRESS,
+                      (char*) tm_get_screen_offset(0, i-1) + VIDEO_ADDRESS,
                       TM_MAX_COLS*2);
 
      //Blank the last line by setting all bytes to 0
@@ -148,9 +141,9 @@ int tm_handle_scrolling(int cursor_offset)
 	return cursor_offset;
 }
 
+//Sets back the cursor by one and deletes the last pented character
 void tm_delete_last()
 {
-	//Sets back the cursor by one and deletes the last printed character
 	int pos = tm_get_cursor();
 	pos -= 2;
 	tm_set_cursor(pos);
@@ -158,6 +151,7 @@ void tm_delete_last()
 	*((char*)0xb8000 + pos) = 0x00;
 }
 
+//Read out char from video memory
 char tm_read_char(int pos)
 {
 	char c = *((char*)0xb8000 + pos);

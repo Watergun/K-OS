@@ -28,7 +28,7 @@ mov es, ax
 mov fs, ax
 mov gs, ax
 
-mov ebp, 0x90000	;Give the stack enough free memory to use
+mov ebp, 0x8FF00	;Give the stack enough free memory to use
 mov esp, ebp
 
 call BEGIN_PM		;Jump back

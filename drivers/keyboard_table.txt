@@ -1,12 +1,12 @@
-Tabelle für die Tastatur-Codes (alles selbst ausprobiert)
+Tabelle für die Tastatur-Codes (alles selbst getestet)
 
 ######
-WICHTIG! Codes gelten nur für getestete (QWERTZ) Tastatur
+WICHTIG! Codes gelten nur für getestete QWERTZ-Tastatur Layout: DE
 ######
 
 Alle Codes gelten nur für die gedrückte Taste.
-Das Loslassen der jeweiligen Taste erzeugt deren Druck-Code + 0x80
-	Beispiel:	'Q' = 10 -> 90 
+Das Loslassen der jeweiligen Taste erzeugt deren 'Druck-Code' + 0x80
+	Beispiel:	'Q' = 0x10 -> Loslassen: 0x90 
 
 CODE (HEX)	TASTE
 01			ESC

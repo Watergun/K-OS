@@ -2,7 +2,7 @@
 
 global cpuid
 
-[extern tm_print_dword]
+[extern tm_print_dword_raw]
 
 ;To check cpuid support, a processor flag will be changed
 ;if it could be changed, the processor does support the cpuid instruction
@@ -31,13 +31,13 @@ cpuid:
 	mov eax, 0x0	
 	cpuid
 	push ebx
-	call tm_print_dword
+	call tm_print_dword_raw
 	pop ebx
 	push ecx
-	call tm_print_dword
+	call tm_print_dword_raw
 	pop ecx
 	push edx
-	call tm_print_dword
+	call tm_print_dword_raw
 	pop edx
 
 .end:

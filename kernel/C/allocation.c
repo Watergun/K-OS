@@ -9,11 +9,15 @@
 
 //Support for APT-Extension (TODO!) isn't implemented yet
 
+#include "allocation.h"
 #include "multitask.h"
 #include "screen.h"
 #include "memory.h"
+#include "process.h"
+#include "kernel.h"
+#include "util.h"
 
-int allocate_data(int process_address, int size)
+int memory_allocate_data(int process_address, unsigned int size)
 {
 //DEBUG
 //tm_print_char('A', TM_COLORS(TM_BLACK, TM_GREEN));
@@ -27,7 +31,7 @@ int allocate_data(int process_address, int size)
 
 	int pointer = 0;	
 	
-	//APT index
+	//APT indices
 	int index = 0;
 	int found = 0;
 	int lastptr = 0;
@@ -80,8 +84,8 @@ int allocate_data(int process_address, int size)
 //tm_print_hex(pointer);
 
 			//Check if unitrange break
-		     int databegin = translate_apt_pointer(process_address, pointer);
-     		int dataend = translate_apt_pointer(process_address, pointer+size);
+		     int databegin = alloc_translate_apt_pointer(process_address, pointer);
+     		int dataend = alloc_translate_apt_pointer(process_address, pointer+size);
 
 //DEBUG
 //tm_print_hex(databegin);
@@ -96,7 +100,7 @@ int allocate_data(int process_address, int size)
           		//So look for the next one
 
 				int next_unit = 0;
-				int *current_unit = (int*) get_unit_by_address(process_address, databegin);
+				int *current_unit = (int*) alloc_get_unit_by_address(process_address, databegin);
 
 				//Reserve one additional unit, if there is no next one
                     //important: to expand memory, the last unit in the unitchain has to be passed to the function
@@ -107,8 +111,8 @@ int allocate_data(int process_address, int size)
 //tm_print_char('N', TM_COLORS(TM_VIOLET, TM_BLACK));
 
 					//Done !
-					next_unit = (int) expand_memory(get_last_unit(process_address), size);
-					pointer = translate_address(process_address, next_unit + 64);
+					next_unit = (int) system_expand_process_memory((int*)alloc_get_last_unit(process_address), size);
+					pointer = alloc_translate_address(process_address, next_unit + 64);
 					break;
 				}
 				else		//more investigations are incoming now
@@ -125,7 +129,7 @@ int allocate_data(int process_address, int size)
 
 //DEBUG
 //tm_print_char('{', TM_DEFAULT_STYLE);
-				int databegin_ptr = translate_address(process_address, databegin);
+				int databegin_ptr = alloc_translate_address(process_address, databegin);
 //tm_print_char('}', TM_DEFAULT_STYLE);
 
 
@@ -148,10 +152,10 @@ int allocate_data(int process_address, int size)
 					
 					//no unit can hold the size
 					if(!memory_base)
-						next_unit = expand_memory(memory_base, size);
+						next_unit = system_expand_process_memory(memory_base, size);
 
 					//Done !
-					pointer = translate_address(process_address, next_unit);
+					pointer = alloc_translate_address(process_address, next_unit);
 					break;
 				}
 				
@@ -161,12 +165,12 @@ int allocate_data(int process_address, int size)
 					//<problem possibility 2> unit(s) between pointers is(are) too small for the data
 					
 					//this is the unit where the next pointer points to			
-					int nextptr_unit = get_unit_by_address(process_address, translate_apt_pointer(process_address, nextptr));
+					int nextptr_unit = alloc_get_unit_by_address(process_address, alloc_translate_apt_pointer(process_address, nextptr));
 	
-					int *memory_base = (int*) next_unit;					
+					int *memory_base = (int*) next_unit;
 					while(memory_base != 0 && (memory_base[1]-64) < size)
 					{
-						int unit = get_unit_by_address(process_address, memory_base);
+						int unit = alloc_get_unit_by_address(process_address, (int)memory_base);
 						
 						//nextptr passed: give up
 						if(unit > nextptr_unit)
@@ -182,7 +186,7 @@ int allocate_data(int process_address, int size)
 					next_unit = (int) memory_base;					
 
 					//is the gap still big enough?
-					databegin_ptr = translate_address(process_address, next_unit + 64);
+					databegin_ptr = alloc_translate_address(process_address, next_unit + 64);
 					if((nextptr - databegin_ptr) >= size)
 					{
 						//Done !
@@ -224,7 +228,7 @@ int allocate_data(int process_address, int size)
 		index += 2;
 		//move all entries one index further
 		int offset = index*4;
-		memory_copy_rev(((int)apt)+offset, ((int)apt) + offset + 8, (4032-offset)-8);
+		memory_copy_rev((char*) ((int)apt)+offset, (char*) ((int)apt) + offset + 8, (4032-offset)-8);
 	}
 
 //DEBUG
@@ -240,7 +244,7 @@ int allocate_data(int process_address, int size)
 //memory_view_func(apt, 64);
 //	
 	//translate pointer to real physical address
-	int address = translate_apt_pointer(process_address, pointer);
+	int address = alloc_translate_apt_pointer(process_address, pointer);
 
 	if(address == 0)
 		return 0;
@@ -252,7 +256,7 @@ int allocate_data(int process_address, int size)
 }
 
 //Translates an APT Pointer to a physical address
-int translate_apt_pointer(int process_address, int ptr)
+int alloc_translate_apt_pointer(int process_address, int ptr)
 {
 	int memory_base = process_address;
 	int address = 0;
@@ -290,7 +294,7 @@ int translate_apt_pointer(int process_address, int ptr)
 	return address;
 }
 
-int translate_address(int process_address, int address)
+int alloc_translate_address(int process_address, int address)
 {
 	int memory_base = process_address;
 	int offset = 0;
@@ -325,7 +329,7 @@ int translate_address(int process_address, int address)
 }
 
 //Returns the last unit in a unit chain
-int get_last_unit(int process_address)
+int alloc_get_last_unit(int process_address)
 {
 	int *address = (int*) process_address;
 	while(address)
@@ -339,7 +343,7 @@ int get_last_unit(int process_address)
 }
 
 //Returns the unit, in which the given address lies
-int get_unit_by_address(int process_address, int address)
+int alloc_get_unit_by_address(int process_address, int address)
 {
 	int *memory_base = (int*) process_address;	
 
@@ -365,11 +369,11 @@ int get_unit_by_address(int process_address, int address)
 
 //Service routine to look for empty APT entries and fix them
 //also: reordering its entries
-void apt_service_routine()
+void apt_service_routine(int process)
 {
 	//This APT Service checks the active APT
 	int index = 0;
-	int *apt = (int*) ((int*)__process__)[12];
+	int *apt = (int*) ((int*)process)[12];
 	int lastptr = 0;
 
 	while(index < 1008)
@@ -384,12 +388,12 @@ void apt_service_routine()
 //memory_view_func(&apt[index], 16);
 //tm_print_char('|', TM_COLORS(TM_BLUE, TM_RED));
 			//Simply move everything one APT entry further to the front
-			memory_copy(&apt[index+2], &apt[index], 4032 - (index*4));
-			flash_memory(((int)apt) + 4024, 8);
-			
+			memory_copy((char*) &apt[index+2],(char*) &apt[index], 4032 - (index*4));
+			flash_memory((char*) ((int)apt) + 4024, 8);
+
 //memory_view_func(&apt[index], 16);
 		}
-		
+
 		//Deletion needed (however this came)
 		else if(ptr == lastptr && ptr != 0)
 		{
@@ -400,22 +404,21 @@ void apt_service_routine()
 			//let the next loop fix that
 			index -= 2;
 		}
-	
+
 		index += 2;
 	}
 }
 
 
 //Real memory allocation (using active process)
-//Will be substituted by a better function, when multicore using is activated
-char* malloc(int size)
+int memory_allocate(unsigned int size)
 {
-	return (char*) allocate_data(__process__, size);
+	return memory_allocate_data(__process__, size);
 	//return 0x00100000;
 }
 
-//Frees the specified memory 
-void mfree(int address)
+//Frees the specified memory (in active process)
+void memory_free(int address)
 {
 //DEBUG
 //tm_print_char('(', TM_DEFAULT_STYLE);
@@ -442,8 +445,7 @@ void mfree(int address)
 		if(index != 0 && ptr == 0)
 			return;
 
-		int address_it = translate_apt_pointer(__process__, ptr);
-
+		int address_it = alloc_translate_apt_pointer(__process__, ptr);
 
 //DEBUG		
 //tm_print_hex(address_it);
@@ -465,18 +467,14 @@ void mfree(int address)
 			apt[index+1] = 0;
 
 			//Immediatly call the service routine after this
-			register_kernelevent(apt_service_routine);
-//DEBUG
-//tm_print_char('{', TM_DEFAULT_STYLE);
-//			apt_service_routine();
-//tm_print_char('}', TM_DEFAULT_STYLE);
-	
+			kernel_register_event((int)apt_service_routine, __process__);
+
 			break;
 		}
 		else
 			index += 2;
 	}
 
-	//At this point, the apt is full and no pointer was found
+	//At this point, the apt is full and no matching pointer was found
 	return;
 }

@@ -3,15 +3,7 @@ Standard string working functions
 */
 
 #include "stdheader.h"
-
-//function list
-size_t strlen(char*);
-int strcmp(char*, char*, int);
-size_t charcount(char*, char);
-size_t wordcount(char*);
-int atoi(char*);
-short char_to_digit(char);
-
+#include "string.h"
 
 //Returns the length of a null-terminated string
 size_t strlen(char *str)
@@ -26,6 +18,15 @@ size_t strlen(char *str)
 //Compares two strings (null-terminated) and returns if smaller (-1), equal (0) or greater (1)
 int strcmp(char *str1, char *str2, int max_length)
 {
+	//length comparison
+	size_t str1_len = strlen(str1);
+	size_t str2_len = strlen(str2);
+
+	if(str1_len < str2_len)
+		return -1;
+	else if(str1_len > str2_len)
+		return 1;
+
      //char by char comparison
 
      int index = 0;
@@ -43,7 +44,7 @@ int strcmp(char *str1, char *str2, int max_length)
 }
 
 //Counts the number of occurences of a given char in a string
-size_t charcount(char *str, char c)
+int strcount_char(char *str, char c)
 {
 	//counter variable
 	size_t counter = 0;
@@ -61,7 +62,7 @@ size_t charcount(char *str, char c)
 }
 
 //Returns the number of space-seperated words in a string
-size_t word_count(char *str)
+int strcount_words(char *str)
 {
 	int ch	 	= 0;
 	int i 		= 0;
@@ -90,9 +91,9 @@ size_t word_count(char *str)
 //String to int conversion
 int atoi(char *str)
 {
-	//TODO: make complete
-
+	//TODO: complete function
 	//only positive numbers yet
+
 	size_t len = strlen(str);
 	size_t i = 0;
 	int a = 0;
@@ -109,8 +110,7 @@ int atoi(char *str)
 	return a;
 }
 
-//Converts a char to a digit
-
+//Converts number character to its digit
 short char_to_digit(char c)
 {
 	switch(c)
@@ -138,5 +138,4 @@ short char_to_digit(char c)
 		default:
 			return 0;
 	}
-
 }

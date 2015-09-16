@@ -62,6 +62,7 @@ global PIC_EOI
 
 EOI_SIGNAL equ 0x20
 
+;Send 'End Of Interrupt' - signal to PIC
 PIC_EOI:
 	push eax
 	mov eax, dword [esp+8]

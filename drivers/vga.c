@@ -1,8 +1,9 @@
 #include "stdheader.h"
 #include "vga.h"
+#include "io_ports.h"
 
 /*
-TODO:
+What is being done in this file:
 
 Disable Output
 Unlock CRTC		-> Unlock Registers
@@ -15,7 +16,7 @@ Lock CRTC			-> Lock Registers
 Enable Display
 */
 
-/*
+/*	VGA Port control instructions
 Ports:
 0x3C0:	WRITE: I+D 0x3C0  READ: I: 0x3C0 D:0x3C1
 0x3C2:	WRITE (Misc. Output Reg.) [READ -> 0x3CC]
@@ -27,9 +28,9 @@ Ports:
 0x3C8: 	WRITE DAC Color Register Index
 0x3C9: 	WRITE DAC Color Register Data (R/G/B) x3
 
-
-
-/*
+ - - - - - - - - - - - - - - - - - - - -
+VGA-Modes and their values to be ported
+ - - - - - - - - - - - - - - - - - - - -
 
 REGISTER NAME		| PORT | INDEX	| mode 13h value 
 
@@ -63,9 +64,6 @@ Vertic. Blank S:	0x3D4	0x15		0x96
 Vertic. Blank E	0x3D4	0x16		0xB9
 Mode Control:		0x3D4	0x17		0xA3
 */
-
-void vga_pixel(uchar, uint,uint);
-void vga_clear_screen();
 
 //Initialises the VGA Mode of the graphics output
 void vga_init()
@@ -229,33 +227,34 @@ void vga_init()
 	//Finish!	
 	vga_clear_screen();
 
+/*	
 	int i = 0;
 	for(; i < 200; i++)
 	{
 		int j = 0;
-		for(; j < 256; j++)
+		for(; j < 300; j++)
 		{
 			vga_pixel(j, j, i);
 		}
-
 	}
+*/	
 }
 
 
 //Zeros all bytes
 void vga_clear_screen()
 {
-	int i = 0;
-	int x = VGA_X_DIMENSION * VGA_Y_DIMENSION;
+	int i = 0;	
+	int resolution = VGA_X_DIMENSION * VGA_Y_DIMENSION;
 	char *vid_mem = (char*) VGA_VIDEO_MEMORY;
-	for(; i < 64000; i++)
+	for(; i < resolution; i++)
 	{
 		vid_mem[i] = 0;
 	}
 }
 
 //Puts a given char to the specified position
-void vga_pixel(uchar color, uint x, uint y) 
+void vga_pixel(char color, uint x, uint y) 
 {
    char *vid_mem = (char*) VGA_VIDEO_MEMORY;
    uint offset     = y*VGA_X_DIMENSION + x;

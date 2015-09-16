@@ -1,6 +1,8 @@
 //memory_view: prints the memory at the specified address charwise
 
 #include "programs.h"
+#include "string.h"
+#include "util.h"
 
 //memory_view [address] [bytes]
 int memory_view(int argc, char **argv)

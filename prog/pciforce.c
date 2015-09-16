@@ -1,4 +1,8 @@
 //
+#include "terminal.h"
+#include "pci.h"
+#include "util.h"
+
 int pciforce(int argc, char **argv)
 {
 	int bus = 0;

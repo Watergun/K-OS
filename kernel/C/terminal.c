@@ -1,11 +1,14 @@
 //K-OS Terminal
+#include "terminal.h"
 #include "stdheader.h"
 #include "screen.h"
-#include "kernelprograms.h"
 #include "programs.h"
 #include "multitask.h"
-
-#define EXECUTE_LINE 0x0001
+#include "string.h"
+#include "allocation.h"
+#include "process.h"
+#include "util.h"
+#include "desktop.h"
 
 //a little pointer for terminal variables
 char *tm_video_buffer;
@@ -14,29 +17,39 @@ char *tm_video_buffer;
 int terminal_status;
 int mark_distance;
 
-//List of all implemented functions
-int terminal(int, char**);
-void terminal_set_statement();
-void terminal_print_string(char*);
-void terminal_exec_line();
-void terminal_pass_char(char);
-void terminal_swap_buffers();
-char **split_exec_line(char *buffer, int *pargc);
+//Infomrations about the terminal-started process
+int hosted_process;
+int process_inbox;
 
+//Terminal process
 int terminal(int argc, char **argv)
 {
 	//Give this terminal process a name
-	name_process(__process__, "K-OS Root Terminal");
+	system_name_process(__process__, "K-OS Root Terminal");
+	system_set_process_inbox(__process__, (int)&terminal_status);
 
 	//Swap buffer for the terminal (TM)
-	tm_video_buffer = (char*)malloc(4000);
+	tm_video_buffer = (char*)memory_allocate(4000);
 
-	mark_distance = 0;
-	terminal_status = 0;
+	mark_distance 		= 0;
+	terminal_status 	= 0;
+	hosted_process 	= 0;
+	process_inbox 		= 0;
 	terminal_set_statement();
 
-	while(1)
+	int running = 1;
+	while(running)
 	{
+		if(terminal_status & EXIT_SIGNAL)
+		{
+			running = 0;
+			terminal_status ^= EXIT_SIGNAL;
+		}
+		if(terminal_status & HOSTED_PROCESS_TERMINATED)
+		{
+			terminal_set_statement();
+			terminal_status ^= HOSTED_PROCESS_TERMINATED;
+		}
 		if(terminal_status & EXECUTE_LINE)
 		{
 			terminal_exec_line();
@@ -44,7 +57,10 @@ int terminal(int argc, char **argv)
 		}
 
           ((char*)VIDEO_ADDRESS)[18] = 'T';
-          ((char*)VIDEO_ADDRESS)[19] = 0x06;	
+          ((char*)VIDEO_ADDRESS)[19] = 0x06;
+//DEBUG
+//int a = 5;
+//tm_print_hex(&a);
 	}
 }
 
@@ -67,7 +83,7 @@ void terminal_exec_line()
 	int length = mark_distance;
 
 	// READ COMMAND
-	char *buffer = (char*) malloc(length);	
+	char *buffer = (char*) memory_allocate(length);	
 
 	int pos = tm_get_cursor();		//get cursor position
 
@@ -84,12 +100,12 @@ void terminal_exec_line()
 	buffer[length] = 0;	
 
 	//EXECUTE COMMAND
-	
+
 	//Either switch here directly or have a big list over all commands
 	//Choosing method 1 at first
 
 	int argc = 0;
-	char **argv = (char**) split_exec_line(buffer, &argc);
+	char **argv = (char**) terminal_split_exec_line(buffer, &argc);
 
 	if(!argv)
 	{
@@ -97,42 +113,41 @@ void terminal_exec_line()
 		return;	
 	}
 	
-	size_t len = strlen(argv[0]);
+	size_t len = strlen(argv[0]) + 1;
 	int result;
-
-	if(!strcmp("hostname", argv[0], len))
-		result = hostname(argc, argv);
-	else if(!strcmp("osname", argv[0], len))
-		result = osname(argc, argv);
+	
+	
+	if(!strcmp("osname", argv[0], len))
+		terminal_start_process((int)osname, argc, argv);
 	else if(!strcmp("memoryview", argv[0], len))
-		result = memory_view(argc, argv);
+		terminal_start_process((int)memory_view, argc, argv);
 	else if(!strcmp("time", argv[0], len))
-		result = time(argc, argv);
+		terminal_start_process((int)time, argc, argv);
 	else if(!strcmp("pci", argv[0], len))
-		result = pciforce(argc, argv);
+		terminal_start_process((int)pciforce, argc, argv);
 	else	if(!strcmp("ktop", argv[0], len))
-		start_process(new_process(desktop, 0, 4096), argc, argv);
+		terminal_start_process((int)desktop, argc, argv);
 	else if(!strcmp("help", argv[0], len))
-		terminal_print_string("osname, hostname, memoryview, time, pci, ktop, kobra, help");
+		terminal_start_process((int)terminal_help, argc, argv);
 	else if(!strcmp("kobra", argv[0], len))
-		start_process(new_process(kobra, 0, 4096), argc, argv);
+		terminal_start_process((int)kobra, argc, argv);
 //
 	else
 	{
 		terminal_print_string("Command not found!");
+		terminal_set_statement();
 		result = 0;
 	}
 
 	//handle result...
 
 	//free allocated memory
-	mfree(buffer);
+	memory_free((int)buffer);
 	for(; argc > 0; argc--)
-		mfree(argv[argc-1]);
-	mfree(argv);
+		memory_free((int)argv[argc-1]);
+	memory_free((int)argv);
 
 	mark_distance = 0;
-	terminal_set_statement();	
 }
 
 void terminal_pass_char(char c)
@@ -140,15 +155,15 @@ void terminal_pass_char(char c)
 	if(c == 0x0D)		//Carriage Return
 	{
 		if(mark_distance == 0)
-		{	
+		{
 			terminal_set_statement();
 			return;
 		}
-		//terminal_exec_line(mark_distance);
+		
 		terminal_status |= EXECUTE_LINE;
 	}
 	else if(c == 0x08)	//Backspace
-	{	
+	{
 		if(mark_distance > 0)
 		{
 			tm_delete_last();
@@ -158,7 +173,7 @@ void terminal_pass_char(char c)
 	else if(c == 0x09)	//Tab
 	{
 		//Tabsize: 5
-		tm_print("     ");	
+		tm_print("     ");
 	}
 	else				//Normal character
 	{
@@ -167,14 +182,14 @@ void terminal_pass_char(char c)
 	}
 }
 
-char **split_exec_line(char *buffer, int *pargc)
+char **terminal_split_exec_line(char *buffer, int *pargc)
 {
 	//receive informations about the buffer
 	int ptrindex = 0;
 	int strlength = strlen(buffer);
 				
 	//There can be just as much arguments as effective spaces in the buffer
-	char **argv = (char**) malloc(word_count(buffer)*4);
+	char **argv = (char**) memory_allocate(strcount_words(buffer)*4);
 
 //DEBUG
 //tm_print_hex(word_count(buffer));
@@ -192,7 +207,7 @@ char **split_exec_line(char *buffer, int *pargc)
 		}
 		else	if(c != 0)	//Create new argument
 		{
-			char *arg = (char*) malloc(c);
+			char *arg = (char*) memory_allocate(c);
 //DEBUG
 //tm_print_hex(arg);
 			
@@ -211,6 +226,7 @@ char **split_exec_line(char *buffer, int *pargc)
 	return argv;
 }
 
+//Swaps the character buffer and the videomemory
 void terminal_swap_buffers()
 {
 	int i = 0;
@@ -218,6 +234,28 @@ void terminal_swap_buffers()
 	{
 		char c = tm_read_char(i);
 		*((char*)0xb8000+i) = *((char*)tm_video_buffer+i);
-		*((char*)tm_video_buffer+i) = c;				
+		*((char*)tm_video_buffer+i) = c;
 	}
+}
+
+//Launches a process inside the terminal
+void terminal_start_process(int code, int argc, char**argv)
+{
+	//
+	hosted_process = system_new_process(code, 0, 4096);
+	
+	//Launch
+	system_start_process(hosted_process, argc, argv);
+}
+
+
+
+
+//The terminal-help program (own process)
+int terminal_help(int argc, char **argv)
+{
+	//This program prints out all available commands
+	terminal_print_string("osname, kobra, ktop, memoryview, pci, time");
+
+	return 0;
 }

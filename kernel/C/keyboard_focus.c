@@ -4,8 +4,10 @@
 //2. Desktop
 
 #include "globalstatus.h"
+#include "terminal.h"
+#include "desktop.h"
 
-void pass_character(char c)
+void system_pass_character(char c)
 {
 	//Find active program
 	if(global_videomode == VID_TEXT)
