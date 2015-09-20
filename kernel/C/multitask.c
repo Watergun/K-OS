@@ -128,9 +128,9 @@ void ph_add_process(int* address)
 		stackmark[8] = address[11];				//instruction pointer at process code
 		stackmark[9] = 0x08;					//segment pointer at code segment
 		int eflags = 0;
-		__asm__("pushfl");
+		__asm__("pushf");
 		__asm__("mov (%%esp), %%eax" : "=a"(eflags) :);
-		__asm__("popfl");
+		__asm__("popf");
 		stackmark[10] = eflags;					//standard process flags
 		stackmark[11] = (int)ph_process_end_loop;		//simulated return address is the result handling routine
 //DEBUG

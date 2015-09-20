@@ -21,7 +21,7 @@ dd: all
 
 #Run qemu
 run: all
-	qemu-system-x86_64 os-image -no-reboot
+	qemu-system-i386 os-image -no-reboot
 
 #This is the actual disk image that the computer loads,
 #which is the combination of our compiled bootsector and kernel
