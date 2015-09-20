@@ -93,7 +93,7 @@ void ph_add_process(int* address)
 	//Create a PIT Pointer starting at the data section (Offset 64)
 	int *pitptr = (int*) (((int)global_system_pit)+64);
 
-	int index = 16;	//Starting right after the memory block header
+	int index = 0;	//Starting right after the memory block header
 
 	//Searching empty PIT space
 	while(pitptr[index] != 0 && index < 1008)
@@ -128,9 +128,9 @@ void ph_add_process(int* address)
 		stackmark[8] = address[11];				//instruction pointer at process code
 		stackmark[9] = 0x08;					//segment pointer at code segment
 		int eflags = 0;
-		__asm__("pushfl");
+		__asm__("pushf");
 		__asm__("mov (%%esp), %%eax" : "=a"(eflags) :);
-		__asm__("popfl");
+		__asm__("popf");
 		stackmark[10] = eflags;					//standard process flags
 		stackmark[11] = (int)ph_process_end_loop;		//simulated return address is the result handling routine
 //DEBUG
