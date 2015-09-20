@@ -4,6 +4,9 @@
 #include "allocation.h"
 #include "util.h"
 #include "string.h"
+#include "vga.h"
+
+#include "screen.h"
 
 int fonts_get_font_data(int font_id, char ch, char* letter)
 {
@@ -45,6 +48,7 @@ int fonts_get_font_data(int font_id, char ch, char* letter)
 					fonts_build_font(letter, 0x00, 0x00, 0x0C, 0x08, 0xE5, 0x8E, 0x00, 0x00, 0x00);
 					break;
 				case 'B':
+					fonts_build_font(letter, 0x0F, 0x0F, 0xF, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F);
 					break;
 				case 'b':
 					break;
@@ -227,20 +231,39 @@ void fonts_build_font(char* letter, char c1, char c2, char c3, char c4, char c5,
 
 
 //Public write function
-void fonts_write_text(char *text, uint x, uint y, int font_id, char font_color)
+void fonts_write_text(char *text, uint x, uint y, int font_id, char font_color, char *videobuffer)
 {
+	int letter_distance = 0;
+
 	//Reserve memory for the letter
 	char *letter = (char*)memory_allocate(SYSTEM_FONT_SIZE);
 	flash_memory(letter, SYSTEM_FONT_SIZE);	
 
 	char c = 0;
 	int i = 0;
-	for(i; i < strlen(text); i++)
+
+	desktop_debug(font_color);
+
+	for(; i < strlen(text); i++)
 	{
+//		videobuffer[y*VGA_X_DIMENSION + x] = font_color;
+
 		c = text[i];
 		fonts_get_font_data(font_id, c, letter);
+
+		int iter = 0;
+		for(; iter < SYSTEM_FONT_TOTAL_PIXELS; iter++)
+		{
+			short letter_x = x + (iter % SYSTEM_FONT_WIDTH);
+			short letter_y = y + (iter / SYSTEM_FONT_WIDTH);
+
+			if(BIT_FROM_BYTE(letter[iter / 8], (7 - (iter % 8))))
+			{
+				videobuffer[letter_y*VGA_X_DIMENSION + letter_x] = font_color;
+			}
+		}
 	
-		
+		x += SYSTEM_FONT_WIDTH + letter_distance;	
 	}
 
 	memory_free((int)letter);

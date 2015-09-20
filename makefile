@@ -2,7 +2,7 @@
 # $^ is substituted with all of the target's dependency files
 
 
-GCC_FLAGS = -Wall -pedantic-errors -Wpedantic -Wextra
+GCC_FLAGS = -m32 -Wall -pedantic-errors -Wpedantic -Wextra
 
 
 KERNEL_ENTRY = kernel/Assembler/kernel_entry.asm
@@ -34,7 +34,7 @@ os-image: boot/boot_sect.bin kernel.bin
 
 #Putting everything together
 kernel.bin: $(patsubst %.asm, %.o, $(KERNEL_ENTRY)) $(OBJ)
-	ld $^ -o $@ --oformat binary -Ttext 0x1000
+	ld -m elf_i386 $^ -o $@ --oformat binary -Ttext 0x1000
 
 #Assemble kernel
 %.o: %.asm
@@ -46,4 +46,4 @@ kernel.bin: $(patsubst %.asm, %.o, $(KERNEL_ENTRY)) $(OBJ)
 
 clean:
 	rm -fr *.o *.bin os-image
-	rm -fr kernel/C/*.o kernel/Assembler/*.o boot/*.bin drivers/*.o
+	rm -fr kernel/C/*.o kernel/Assembler/*.o boot/*.bin drivers/*.o prog/*.o lib/*.o 

@@ -10,6 +10,9 @@
 #include "util.h"
 #include "desktop.h"
 
+//DEBUG
+#include "fonts.h"
+
 //a little pointer for terminal variables
 char *tm_video_buffer;
 

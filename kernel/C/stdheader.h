@@ -13,7 +13,7 @@ typedef unsigned long ulong;
 #define INT32(H, L)	((H << 16) | ((L << 16) >> 16))
 #define INT16_HIGH(I)			(I >> 16)
 #define INT16_LOW(I)			((I << 16) >> 16) 
-#define BIT_FROM_BYTE(Byte, Index)	((Byte << (7-Index)) >> 7)
+#define BIT_FROM_BYTE(Byte, Index)	(((Byte << (7-Index)) & 0xFF) >> 7)
 
 /*
 INTER - PROCESS - COMMUNICATION MESSAGES

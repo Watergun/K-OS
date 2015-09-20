@@ -10,6 +10,7 @@
 #include "util.h"
 #include "allocation.h"
 #include "string.h"
+#include "fonts.h"
 
 /*
 320 * 200 px = 64000 px
@@ -60,6 +61,7 @@ int desktop(int argc, char **argv)
 	
 	//Fill with content
 	char *login_panel_raw = (char*) (login_panel+64);
+	fonts_write_text("Aa", 10, 10, 0, VGA_COLOR(0, 0, 5), login_panel_raw);
 //	flash_memory(login_panel_raw, 64000);
 
 //int u = 0;
@@ -84,6 +86,9 @@ int desktop(int argc, char **argv)
 			running = 0;
 			desktop_status ^= EXIT_SIGNAL;
 		}
+
+		//Draw text
+		
 
 		//Render
 		desktop_render();
@@ -260,6 +265,9 @@ int desktop_create_panel(char *title, uint width, uint height, uint x, uint y)
 		else
 			plt_index += 1;
 	}
+
+	//Draw title
+	//fonts_write_text("Aa", 10, 10, 0, 200, (char*) &ptr[16]);
 
 	return (int) ptr;
 }

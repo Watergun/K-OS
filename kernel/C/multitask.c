@@ -93,7 +93,7 @@ void ph_add_process(int* address)
 	//Create a PIT Pointer starting at the data section (Offset 64)
 	int *pitptr = (int*) (((int)global_system_pit)+64);
 
-	int index = 16;	//Starting right after the memory block header
+	int index = 0;	//Starting right after the memory block header
 
 	//Searching empty PIT space
 	while(pitptr[index] != 0 && index < 1008)

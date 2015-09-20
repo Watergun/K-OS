@@ -12,6 +12,6 @@
 int fonts_get_font_data(int font_id, char c, char *letter);
 
 void fonts_build_font(char *letter, char, char, char, char, char, char, char, char, char);
-void fonts_write_text(char *text, uint x, uint y, int font_id, char font_color);
+void fonts_write_text(char *text, uint x, uint y, int font_id, char font_color, char *videobuffer);
 
 #endif
